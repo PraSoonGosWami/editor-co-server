@@ -9,7 +9,7 @@ const userRoutes = require("./routes/user-routes");
 
 const PORT = process.env.PORT || 5000;
 const password = "defraction44";
-const dbName = "google_docs_clone";
+const dbName = "editor_co";
 
 app.use(cors());
 app.use(express.json({ limit: "30mb", extended: false }));
@@ -17,7 +17,7 @@ app.use(express.urlencoded({ limit: "30mb", extended: false }));
 
 app.get("/", (req, res) => res.status(200).json("hello world"));
 
-app.use("/api/auth", userRoutes);
+app.use("/api/v1/auth", userRoutes);
 
 //Server socket
 ServerSocket(server);
@@ -25,12 +25,10 @@ ServerSocket(server);
 //connecting to database
 mongoose
   .connect(
-    `mongodb+srv://Prasoon:${password}@clusterx.tn29p.mongodb.net/${dbName}?retryWrites=true&w=majority`,
+    `mongodb+srv://Prasoon:${password}@clusterx.tn29p.mongodb.net/${dbName}?retryWrites=true&w=majority&ssl=true`,
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      useFindAndModify: false,
-      useCreateIndex: true,
     }
   )
   .then(() =>
