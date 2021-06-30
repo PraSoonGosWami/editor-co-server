@@ -5,6 +5,7 @@ const cors = require("cors");
 
 const mongo = require("./database/mongo");
 const ServerSocket = require("./socket");
+const documentRoutes = require("./routes/document-routes");
 const userRoutes = require("./routes/user-routes");
 
 const PORT = process.env.PORT || 5000;
@@ -24,6 +25,7 @@ app.use(express.urlencoded({ extended: false }));
 app.get("/", (req, res) => res.status(200).json("hello world"));
 
 app.use("/api/v1/auth", userRoutes);
+app.use("/api/v1/doc", documentRoutes);
 
 //Server socket
 ServerSocket(server);

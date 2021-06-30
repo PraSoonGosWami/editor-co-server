@@ -6,4 +6,4 @@ const tempUserSchema = new Schema({
   viewer: [{ type: Types.ObjectId, ref: "Document" }],
 });
 
-module.exports = model("Temp-user", tempUserSchema);
+module.exports = model("Tuser", tempUserSchema);
