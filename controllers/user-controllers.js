@@ -8,6 +8,11 @@ const HttpError = require("../models/http-error");
 const auth = async (req, res, next) => {
   const { profile, googleId } = req.body;
 
+  /**
+   * Finding the exisitng user in datbase
+   * if found return
+   * else create new
+   */
   let exisitingUser;
   try {
     exisitingUser = await userModel.findOne({ googleId });
