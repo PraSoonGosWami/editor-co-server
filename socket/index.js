@@ -13,13 +13,7 @@ const ServerSocket = (server) => {
     },
   });
 
-  io.on("connection", (socket) => {
-    console.log(`New user connected ${socket.id}`);
-
-    socket.on("disconnect", () =>
-      console.log(`User ${socket.id} disconnected`)
-    );
-  });
+  io.on("connection", (socket) => {});
 };
 
 module.exports = ServerSocket;

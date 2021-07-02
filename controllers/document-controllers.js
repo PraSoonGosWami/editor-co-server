@@ -4,20 +4,27 @@ const tUserModel = require("../models/temp-user-model");
 const userModel = require("../models/user-model");
 const HttpError = require("../models/http-error");
 
-//creates a new document
-const createNewDocument = async (req, res, next) => {
-  const { userId, body } = req;
-  const { name, private } = body;
-  console.log(userId);
-  if (!userId) return res.status(401).json({ message: "Unautorized access" });
-  if (!name || private === null)
-    return res.status(422).json({ message: "Invaild entity passed" });
+const getUserIdFromGoogleId = async (userId) => {
   let user;
   try {
     user = await userModel.findOne({ googleId: userId });
   } catch (e) {
-    return next(new HttpError("Cannot create document. Please try again", 500));
+    console.log({ message: "Fetch error", reason: e });
+    return next(new HttpError("Cannot fetch documents. Please try again", 500));
   }
+  return user;
+};
+
+//creates a new document
+const createNewDocument = async (req, res, next) => {
+  const { userId, body } = req;
+  const { name, private } = body;
+
+  if (!userId) return res.status(401).json({ message: "Unautorized access" });
+  if (!name || private === null)
+    return res.status(422).json({ message: "Invaild entity passed" });
+
+  const user = await getUserIdFromGoogleId(userId);
 
   if (!user) return res.status(401).json({ message: "Unautorized access" });
   const newDoc = new documentModel({
@@ -55,13 +62,8 @@ const getAllDocuments = async (req, res, next) => {
   const { userId } = req;
   if (!userId) return res.status(401).json({ message: "Unautorized access" });
 
-  let user;
-  try {
-    user = await userModel.findOne({ googleId: userId });
-  } catch (e) {
-    console.log({ message: "Fetch error", reason: e });
-    return next(new HttpError("Cannot fetch documents. Please try again", 500));
-  }
+  const user = await getUserIdFromGoogleId(userId);
+
   if (!user) return res.status(401).json({ message: "Unautorized access" });
 
   let docs;
@@ -80,5 +82,41 @@ const getAllDocuments = async (req, res, next) => {
   });
 };
 
+// fetches document by id
+const getDocumentsById = async (req, res, next) => {
+  const { body, userId } = req;
+  const { docId } = body;
+  let doc;
+  try {
+    doc = await documentModel.findById(docId);
+  } catch (e) {
+    console.log({ message: "Document Fetch error", reason: e });
+    return next(new HttpError("Cannot fetch documents. Please try again", 500));
+  }
+  if (!doc) return res.status(404).json({ message: "No such documents found" });
+
+  const user = await getUserIdFromGoogleId(userId);
+  if (!user) return res.status(401).json({ message: "Unautorized access" });
+
+  const userDbId = user._id;
+  if (doc.creator.equals(userDbId))
+    return res
+      .status(200)
+      .json({ doc, role: "owner", message: "Document found" });
+  if (doc.editors.includes(userDbId))
+    return res
+      .status(200)
+      .json({ doc, role: "editor", message: "Documents found" });
+  if (doc.viewers.includes(userDbId))
+    return res
+      .status(200)
+      .json({ doc, role: "viewer", message: "Documents found" });
+
+  return res
+    .status(401)
+    .json({ message: "You dont have permissions to access this document" });
+};
+
 exports.createNewDocument = createNewDocument;
 exports.getAllDocuments = getAllDocuments;
+exports.getDocumentsById = getDocumentsById;

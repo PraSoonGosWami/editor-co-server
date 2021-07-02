@@ -18,4 +18,12 @@ router.post("/create", checkAuth, documentControllers.createNewDocument);
 
 router.get("/get/user", checkAuth, documentControllers.getAllDocuments);
 
+/**
+ * @post
+ * fetches document with a given id
+ * /api/v1/doc/get/byId
+ */
+
+router.post("/get/byId", checkAuth, documentControllers.getDocumentsById);
+
 module.exports = router;
