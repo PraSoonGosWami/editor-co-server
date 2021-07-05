@@ -19,6 +19,14 @@ router.post("/create", checkAuth, documentControllers.createNewDocument);
 router.get("/get/user", checkAuth, documentControllers.getAllDocuments);
 
 /**
+ * @get
+ * feteches all shared documents by user id
+ * /api/v1/doc/get/shared
+ */
+
+router.get("/get/shared", checkAuth, documentControllers.getAllSharedDocuments);
+
+/**
  * @post
  * fetches document with a given id
  * /api/v1/doc/get/byId

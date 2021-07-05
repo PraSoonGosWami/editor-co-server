@@ -1,4 +1,5 @@
 const socketIo = require("socket.io");
+const { saveDocumentById } = require("../controllers/document-controllers");
 
 /**
  *
@@ -13,7 +14,28 @@ const ServerSocket = (server) => {
     },
   });
 
-  io.on("connection", (socket) => {});
+  const userData = {};
+
+  io.on("connection", (socket) => {
+    socket.on("join-room", ({ docId, userId }) => {
+      socket.join(docId);
+      userData[docId] = {};
+      userData[docId][socket.id] = userId;
+      socket.on("send-changes", (delta) => {
+        socket.broadcast.to(docId).emit("receive-changes", delta);
+      });
+      socket.on("update-cursor", (cursorData) => {
+        socket.broadcast.to(docId).emit("receive-cursor", cursorData);
+      });
+      socket.on("save-document", async (payload) => {
+        const message = await saveDocumentById({ docId, ...payload });
+        socket.emit("save-document-response", message);
+      });
+      socket.on("disconnect", () => {
+        delete userData[docId][socket.id];
+      });
+    });
+  });
 };
 
 module.exports = ServerSocket;
