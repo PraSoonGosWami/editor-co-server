@@ -24,9 +24,10 @@ const createNewDocument = async (req, res, next) => {
   if (!name || private === null)
     return res.status(422).json({ message: "Invaild entity passed" });
 
+  //checking user authentication
   const user = await getUserIdFromGoogleId(userId);
-
   if (!user) return res.status(401).json({ message: "Unautorized access" });
+
   const newDoc = new documentModel({
     name,
     creator: user._id,
@@ -60,8 +61,8 @@ const getAllDocuments = async (req, res, next) => {
   const { userId } = req;
   if (!userId) return res.status(401).json({ message: "Unautorized access" });
 
+  //checking user authentication
   const user = await getUserIdFromGoogleId(userId);
-
   if (!user) return res.status(401).json({ message: "Unautorized access" });
 
   let docs;
@@ -84,6 +85,11 @@ const getAllDocuments = async (req, res, next) => {
 const getDocumentsById = async (req, res, next) => {
   const { body, userId } = req;
   const { docId } = body;
+
+  //checking user authentication
+  const user = await getUserIdFromGoogleId(userId);
+  if (!user) return res.status(401).json({ message: "Unautorized access" });
+
   let doc;
   try {
     doc = await documentModel.findById(docId);
@@ -91,10 +97,12 @@ const getDocumentsById = async (req, res, next) => {
     console.log({ message: "Document Fetch error", reason: e });
     return next(new HttpError("Cannot fetch documents. Please try again", 500));
   }
-  if (!doc) return res.status(404).json({ message: "No such documents found" });
-
-  const user = await getUserIdFromGoogleId(userId);
-  if (!user) return res.status(401).json({ message: "Unautorized access" });
+  if (!doc)
+    return res
+      .status(404)
+      .json({
+        message: "No such document found. It might be deleted by the creator",
+      });
 
   const userDbId = user._id;
   if (doc.creator.equals(userDbId))
@@ -146,6 +154,47 @@ const getAllSharedDocuments = async (req, res, next) => {
   });
 };
 
+const deleteDocumentById = async (req, res, next) => {
+  const { body, userId } = req;
+  const { docId } = body;
+
+  //checking user authentication
+  const user = await getUserIdFromGoogleId(userId);
+  if (!user) return res.status(401).json({ message: "Unautorized access" });
+
+  let doc;
+  try {
+    doc = await documentModel.findById(docId).populate("creator");
+  } catch (e) {
+    console.log({ message: "Document Fetch error", reason: e });
+    return next(new HttpError("Cannot fetch documents. Please try again", 500));
+  }
+
+  if (!doc) return res.status(404).json({ message: "No such documents found" });
+
+  //return res.status(200).json({ doc });
+  if (!doc.creator._id.equals(user._id))
+    return res.status(401).json({
+      message: "Sorry! You don't have access to delete this document",
+    });
+
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await doc.remove({ session: sess });
+    doc.creator.documents.pull(doc);
+    await doc.creator.save({ session: sess });
+    await sess.commitTransaction();
+  } catch (err) {
+    console.log({ message: "Document Fetch error", reason: e });
+    return next(
+      new HttpError("Something went wrong, could not delete document.", 500)
+    );
+  }
+
+  res.status(200).json({ message: "Documented deleted successfully" });
+};
+
 //saves a document by id through sockets
 const saveDocumentById = async ({ docId, data, userId }) => {
   if (!docId || !data || !userId) return;
@@ -165,4 +214,5 @@ exports.createNewDocument = createNewDocument;
 exports.getAllDocuments = getAllDocuments;
 exports.getDocumentsById = getDocumentsById;
 exports.getAllSharedDocuments = getAllSharedDocuments;
+exports.deleteDocumentById = deleteDocumentById;
 exports.saveDocumentById = saveDocumentById;
