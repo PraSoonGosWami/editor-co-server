@@ -40,10 +40,6 @@ router.post("/get/byId", checkAuth, documentControllers.getDocumentsById);
  * /api/v1/doc/delete/byId
  */
 
-router.delete(
-  "/delete/byId",
-  checkAuth,
-  documentControllers.deleteDocumentById
-);
+router.post("/delete/byId", checkAuth, documentControllers.deleteDocumentById);
 
 module.exports = router;

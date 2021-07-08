@@ -85,7 +85,7 @@ const getAllDocuments = async (req, res, next) => {
 const getDocumentsById = async (req, res, next) => {
   const { body, userId } = req;
   const { docId } = body;
-
+  if (!docId) return res.status(422).json({ message: "Invaild entity passed" });
   //checking user authentication
   const user = await getUserIdFromGoogleId(userId);
   if (!user) return res.status(401).json({ message: "Unautorized access" });
@@ -98,11 +98,9 @@ const getDocumentsById = async (req, res, next) => {
     return next(new HttpError("Cannot fetch documents. Please try again", 500));
   }
   if (!doc)
-    return res
-      .status(404)
-      .json({
-        message: "No such document found. It might be deleted by the creator",
-      });
+    return res.status(404).json({
+      message: "No such document found. It might be deleted by the creator",
+    });
 
   const userDbId = user._id;
   if (doc.creator.equals(userDbId))
@@ -158,6 +156,7 @@ const deleteDocumentById = async (req, res, next) => {
   const { body, userId } = req;
   const { docId } = body;
 
+  if (!docId) return res.status(422).json({ message: "Invaild entity passed" });
   //checking user authentication
   const user = await getUserIdFromGoogleId(userId);
   if (!user) return res.status(401).json({ message: "Unautorized access" });
