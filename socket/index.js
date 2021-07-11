@@ -9,7 +9,7 @@ const { saveDocumentById } = require("../controllers/document-controllers");
 const ServerSocket = (server) => {
   const io = socketIo(server, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: "*",
       method: ["GET", "POST"],
     },
   });

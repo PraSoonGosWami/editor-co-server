@@ -35,11 +35,19 @@ router.get("/get/shared", checkAuth, documentControllers.getAllSharedDocuments);
 router.post("/get/byId", checkAuth, documentControllers.getDocumentsById);
 
 /**
- * @delete
+ * @post
  * delete document with a given id
  * /api/v1/doc/delete/byId
  */
 
 router.post("/delete/byId", checkAuth, documentControllers.deleteDocumentById);
+
+/**
+ * @post
+ * updates document name with a given id
+ * /api/v1/doc/update/byId
+ */
+
+router.post("/update/byId", checkAuth, documentControllers.updateDocumentById);
 
 module.exports = router;

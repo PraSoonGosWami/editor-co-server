@@ -1,5 +1,4 @@
 const userModel = require("../models/user-model");
-const tUserModel = require("../models/temp-user-model");
 const HttpError = require("../models/http-error");
 
 /**
@@ -25,13 +24,12 @@ const auth = async (req, res, next) => {
     return res.status(201).json({ message: "Logged in succesfully" });
 
   try {
-    const tempUser = await tUserModel.findOne({ email: profile.email });
     await userModel.create({
       googleId,
       profile,
       documents: [],
-      editor: tempUser?.editor || [],
-      viewer: tempUser?.viewer || [],
+      editor: [],
+      viewer: [],
     });
   } catch (e) {
     console.error({ message: "User authentication failed.", reason: e });
