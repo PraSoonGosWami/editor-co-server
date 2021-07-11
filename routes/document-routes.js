@@ -50,4 +50,16 @@ router.post("/delete/byId", checkAuth, documentControllers.deleteDocumentById);
 
 router.post("/update/byId", checkAuth, documentControllers.updateDocumentById);
 
+/**
+ * @post
+ * updates document sharing settings with a given id
+ * /api/v1/doc/sharing/byId
+ */
+
+router.post(
+  "/sharing/byId",
+  checkAuth,
+  documentControllers.updateDocumentSharing
+);
+
 module.exports = router;

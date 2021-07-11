@@ -234,7 +234,9 @@ const updateDocumentById = async (req, res, next) => {
 const updateDocumentSharing = async (req, res, next) => {
   const { body, userId } = req;
   const { docId, shared } = body;
-  if (!docId || !shared)
+  const { private, editors, viewers } = shared;
+
+  if (!docId || private === null || editors === null || viewers === null)
     return res.status(422).json({ message: "Invaild entity passed" });
   //checking user authentication
   const user = await getUserIdFromGoogleId(userId);
@@ -249,8 +251,21 @@ const updateDocumentSharing = async (req, res, next) => {
   if (!doc) return res.status(404).json({ message: "No such documents found" });
   if (!doc.creator.equals(user._id))
     return res.status(401).json({
-      message: "Only owner of the document can sharing settings",
+      message: "Only owner of the document can manage sharing settings",
     });
+
+  try {
+    doc.private = private;
+    doc.editors = [...editors];
+    doc.viewers = [...viewers];
+    await doc.save();
+  } catch (e) {
+    console.log({ message: "Document sharing update error", reason: e });
+    return next(new HttpError("Cannot update detaild. Please try again", 500));
+  }
+  return res.status(200).json({
+    message: "Sharing settings updated",
+  });
 };
 
 //saves a document by id through sockets
@@ -274,4 +289,5 @@ exports.getAllSharedDocuments = getAllSharedDocuments;
 exports.getDocumentsById = getDocumentsById;
 exports.deleteDocumentById = deleteDocumentById;
 exports.updateDocumentById = updateDocumentById;
+exports.updateDocumentSharing = updateDocumentSharing;
 exports.saveDocumentById = saveDocumentById;
