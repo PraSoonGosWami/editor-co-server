@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const documentModel = require("../models/document-model");
 const userModel = require("../models/user-model");
 const HttpError = require("../models/http-error");
+const sendMail = require("../utils/send-mail");
 
 const getUserIdFromGoogleId = async (userId) => {
   let user;
@@ -259,6 +260,9 @@ const updateDocumentSharing = async (req, res, next) => {
     doc.editors = [...editors];
     doc.viewers = [...viewers];
     await doc.save();
+    // const { name, email } = user.profile;
+    // const docURL = `https://editor-co.web.app/doc/${doc._id}`;
+    // await sendMail([...editors, ...viewers], name, email, doc.name, docURL);
   } catch (e) {
     console.log({ message: "Document sharing update error", reason: e });
     return next(new HttpError("Cannot update detaild. Please try again", 500));
