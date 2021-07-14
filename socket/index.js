@@ -3,13 +3,17 @@ const { saveDocumentById } = require("../controllers/document-controllers");
 
 /**
  *
- * @param {*} server - http server
+ * @param server - http server
  * All server side socket related logic
  */
 const ServerSocket = (server) => {
   const io = socketIo(server, {
     cors: {
-      origin: "*",
+      origins: [
+        "https://editor-co.web.app",
+        "https://editor-co.firebaseapp.com",
+        "http://localhost:3000",
+      ],
       method: ["GET", "POST"],
     },
   });

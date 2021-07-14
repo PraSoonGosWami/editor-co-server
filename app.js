@@ -18,7 +18,17 @@ mongo()
     console.log(err);
   });
 
-app.use(cors());
+//CORS policy protection
+const whitelist = [
+  "https://editor-co.web.app",
+  "https://editor-co.firebaseapp.com",
+  "http://localhost:3000",
+];
+const corsOptions = {
+  origin: whitelist,
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
 app.use(express.json({ extended: false }));
 app.use(express.urlencoded({ extended: false }));
 
