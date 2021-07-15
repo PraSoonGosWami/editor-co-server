@@ -123,7 +123,7 @@ const getDocumentsById = async (req, res, next) => {
 
   let doc;
   try {
-    doc = await documentModel.findById(docId);
+    doc = await documentModel.findById(docId).select({ data: 0 });
   } catch (e) {
     console.log({ message: "Document Fetch error", reason: e });
     return next(new HttpError("Cannot fetch documents. Please try again", 500));
@@ -135,7 +135,6 @@ const getDocumentsById = async (req, res, next) => {
 
   const userDbId = user._id;
   const userEmail = user?.profile?.email;
-
   if (doc.creator.equals(userDbId))
     return res
       .status(200)
@@ -272,8 +271,10 @@ const updateDocumentSharing = async (req, res, next) => {
   });
 };
 
+//used internally by sockets
+
 //saves a document by id through sockets
-const saveDocumentById = async ({ docId, data, userId }) => {
+const saveDocument = async ({ docId, data, userId }) => {
   if (!docId || !data || !userId) return;
   const user = await getUserIdFromGoogleId(userId);
   if (!user) return { message: "Unautorized access" };
@@ -282,8 +283,22 @@ const saveDocumentById = async ({ docId, data, userId }) => {
       data,
       lastEdited: { user: user._id, when: new Date() },
     });
+    console.log("Saved to database. userId-", userId);
   } catch (e) {
     return { message: "Cannot save document" };
+  }
+};
+
+//gets a document by id through sockets
+const getDocument = async ({ docId, userId }) => {
+  if (!docId || !userId) return;
+  const user = await getUserIdFromGoogleId(userId);
+  if (!user) return { message: "Unautorized access" };
+  try {
+    const document = await documentModel.findById(docId);
+    return { data: document.data };
+  } catch (e) {
+    return { message: "Cannot fetch document" };
   }
 };
 
@@ -294,4 +309,5 @@ exports.getDocumentsById = getDocumentsById;
 exports.deleteDocumentById = deleteDocumentById;
 exports.updateDocumentById = updateDocumentById;
 exports.updateDocumentSharing = updateDocumentSharing;
-exports.saveDocumentById = saveDocumentById;
+exports.saveDocument = saveDocument;
+exports.getDocument = getDocument;

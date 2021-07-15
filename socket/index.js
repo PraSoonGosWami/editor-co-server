@@ -1,5 +1,8 @@
 const socketIo = require("socket.io");
-const { saveDocumentById } = require("../controllers/document-controllers");
+const {
+  saveDocument,
+  getDocument,
+} = require("../controllers/document-controllers");
 
 /**
  *
@@ -18,25 +21,32 @@ const ServerSocket = (server) => {
     },
   });
 
-  const userData = {};
+  const documents = {};
 
   io.on("connection", (socket) => {
-    socket.on("join-room", ({ docId, userId }) => {
+    socket.on("join-room", async ({ docId, userId }) => {
       socket.join(docId);
-      userData[docId] = {};
-      userData[docId][socket.id] = userId;
+      if (!documents[docId]) {
+        const data = await getDocument({ docId, userId });
+        documents[docId] = data;
+      }
+
+      socket.emit("load-document", documents[docId]["data"]);
+
       socket.on("send-changes", (delta) => {
         socket.broadcast.to(docId).emit("receive-changes", delta);
       });
       socket.on("update-cursor", (cursorData) => {
         socket.broadcast.to(docId).emit("receive-cursor", cursorData);
       });
-      socket.on("save-document", async (payload) => {
-        const message = await saveDocumentById({ docId, ...payload });
-        socket.emit("save-document-response", message);
+      socket.on("save-document", (payload) => {
+        documents[docId] = { ...payload };
       });
-      socket.on("disconnect", () => {
-        delete userData[docId][socket.id];
+      socket.on("disconnect", async () => {
+        const message = await saveDocument({ docId, ...documents[docId] });
+        socket.emit("save-document-response", message);
+        const room = io.sockets.adapter.rooms.get(docId);
+        if (room === undefined) delete documents[docId];
       });
     });
   });
