@@ -123,7 +123,10 @@ const getDocumentsById = async (req, res, next) => {
 
   let doc;
   try {
-    doc = await documentModel.findById(docId).select({ data: 0 });
+    doc = await documentModel
+      .findById(docId)
+      .populate("creator", "profile.name profile.imageUrl")
+      .select({ data: 0 });
   } catch (e) {
     console.log({ message: "Document Fetch error", reason: e });
     return next(new HttpError("Cannot fetch documents. Please try again", 500));
@@ -139,6 +142,7 @@ const getDocumentsById = async (req, res, next) => {
     return res
       .status(200)
       .json({ doc, role: "owner", message: "Document found" });
+
   if (doc.editors.includes(userEmail))
     return res
       .status(200)
