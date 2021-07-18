@@ -282,14 +282,23 @@ const saveDocument = async ({ docId, data, userId }) => {
   if (!docId || !data || !userId) return;
   const user = await getUserIdFromGoogleId(userId);
   if (!user) return { message: "Unautorized access" };
+  let doc;
   try {
-    await documentModel.findByIdAndUpdate(docId, {
-      data,
-      lastEdited: { user: user._id, when: new Date() },
-    });
-    console.log("Saved to database. userId-", userId);
+    doc = await documentModel.findById(docId);
   } catch (e) {
     return { message: "Cannot save document" };
+  }
+  if (!doc) return { message: "No such documents found" };
+  const userDbId = user._id;
+  const userEmail = user?.profile?.email;
+  if (doc.creator.equals(userDbId) || doc.editors.includes(userEmail)) {
+    (doc.data = data), (doc.lastEdited = { user: user._id, when: new Date() });
+    try {
+      await doc.save();
+      console.log(`Document ${doc._id} updated by ${userEmail}`);
+    } catch (e) {
+      return { message: "Cannot save document" };
+    }
   }
 };
 

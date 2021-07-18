@@ -25,7 +25,7 @@ const ServerSocket = (server) => {
   const users = {};
 
   io.on("connection", (socket) => {
-    socket.on("join-room", async ({ docId, userId, profile }) => {
+    socket.on("join-room", async ({ docId, userId, name, avatar }) => {
       //joining the room
       socket.join(docId);
       //check if document with docId already presenet in memory
@@ -38,8 +38,8 @@ const ServerSocket = (server) => {
       users[docId] = {
         ...users[docId],
         [socket.id]: {
-          name: profile?.name,
-          avatar: profile?.imageUrl,
+          name,
+          avatar,
           id: userId,
         },
       };
